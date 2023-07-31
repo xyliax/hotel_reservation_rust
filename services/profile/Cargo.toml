@@ -1,0 +1,27 @@
+[package]
+name = "profile"
+version = "0.1.0"
+edition = "2021"
+
+
+[[bin]]
+name = "profile-service"
+path = "src/profile.rs"
+
+
+[dependencies]
+tonic = "0.9"
+prost = "0.11"
+tokio = { version = "1.29", features = ["full"] }
+mongodb = { version = "2.6.0" }
+futures = "0.3"
+# microservice dependencies
+config = { path = "../../config" }
+# tracing
+opentelemetry = { version = "*", features = ["rt-tokio"] }
+opentelemetry-jaeger = { version = "*", features = ["rt-tokio"] }
+colored = "2"
+
+
+[build-dependencies]
+tonic-build = "0.9"

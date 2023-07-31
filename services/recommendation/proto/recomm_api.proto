@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package recomm_api;
+
+service RecommService {
+  rpc GetRecmd(GetRecmdRequest) returns (GetRecmdResponse);
+}
+
+// The requirement of the recommendation.
+message GetRecmdRequest {
+  double latitude = 1;
+  double longitude = 2;
+  UserProfile user_profile = 3;
+}
+
+message GetRecmdResponse {
+  repeated string hotel_ids = 1;
+}
+
+message UserProfile {
+  string id = 1;
+  string username = 2;
+  string password = 3;
+  string location = 4;
+  string favorite = 5;
+}

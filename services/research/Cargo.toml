@@ -1,0 +1,24 @@
+[package]
+name = "research"
+version = "0.1.0"
+edition = "2021"
+
+
+[[bin]]
+name = "research-service"
+path = "src/research.rs"
+
+
+[dependencies]
+tonic = "0.9"
+prost = "0.11"
+tokio = { version = "1.29", features = ["full"] }
+# microservice dependencies
+config = { path = "../../config" }
+geo = { path = "../geo" }
+
+opentelemetry = { version = "*", features = ["rt-tokio"] }
+opentelemetry-jaeger = { version = "*", features = ["rt-tokio"] }
+
+[build-dependencies]
+tonic-build = "0.9"

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package profile_api;
+
+service ProfileService {
+  rpc GetComments(GetCommentsRequest) returns (GetCommentsResponse);
+}
+
+message GetCommentsRequest {
+  string hotel_id = 1;
+}
+
+message GetCommentsResponse {
+  repeated Comment comments = 1;
+}
+
+message Comment {
+  string id = 1;
+  string hotel_id = 2;
+  string text = 3;
+  string date = 4;
+  string author = 5;
+}

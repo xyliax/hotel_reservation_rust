@@ -1,0 +1,5 @@
+# Virtual Workspace
+
+[workspace]
+members = ["services/*", "config"]
+resolver = "2"

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package reserv_api;
+
+service ReservService {
+  // MakeReservation makes a reservation based on given information
+  rpc MakeReservation(ReservRequest) returns (ReservResponse);
+  // CheckAvailability checks if given information is available
+  rpc CheckAvailability(ReservRequest) returns (ReservResponse);
+}
+
+message ReservRequest {
+  string customerName = 1;
+  repeated string hotelId = 2;
+  string inDate = 3;
+  string outDate = 4;
+  int32  roomNumber = 5;
+}
+
+message ReservResponse {
+  repeated string hotelId = 1;
+}

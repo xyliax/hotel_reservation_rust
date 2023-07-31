@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package user_api;
+
+service UserService {
+  /* CheckUser returns whether the username and password are correct */
+  rpc CheckUser(CheckUserRequest) returns (CheckUserResponse);
+  
+}
+
+message CheckUserRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message CheckUserResponse {
+  bool correct = 1;
+}
+
+message UserProfile {
+  string id = 1;
+  string username = 2;
+  string password = 3;
+  string location = 4;
+  string favorite = 5;
+}

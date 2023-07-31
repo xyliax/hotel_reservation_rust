@@ -1,0 +1,27 @@
+[package]
+name = "user"
+version = "0.1.0"
+edition = "2021"
+
+
+[[bin]]
+name = "user-service"
+path = "src/user.rs"
+
+
+[dependencies]
+tonic = "0.9"
+prost = "0.11"
+tokio = { version = "1.29", features = ["full"] }
+mongodb = "2.6.0"
+futures = "0.3"
+# microservice dependencies
+config = { path = "../../config" }
+# tracing
+opentelemetry = { version = "*", features = ["rt-tokio"] }
+opentelemetry-jaeger = { version = "*", features = ["rt-tokio"] }
+colored = "2"
+
+
+[build-dependencies]
+tonic-build = "0.9"
