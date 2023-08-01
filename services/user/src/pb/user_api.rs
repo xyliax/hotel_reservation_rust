@@ -21,10 +21,12 @@ pub struct UserProfile {
     pub username: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
     pub password: ::prost::alloc::string::String,
-    #[prost(string, tag = "4")]
-    pub location: ::prost::alloc::string::String,
-    #[prost(string, tag = "5")]
-    pub favorite: ::prost::alloc::string::String,
+    #[prost(int64, tag = "4")]
+    pub favorite: i64,
+    #[prost(double, tag = "5")]
+    pub latitude: f64,
+    #[prost(double, tag = "6")]
+    pub longitude: f64,
 }
 /// Generated client implementations.
 pub mod user_service_client {

@@ -81,8 +81,9 @@ impl UserServiceImpl {
         doc! {
             USERNAME: &user_profile.username,
             PASSWORD: &user_profile.password,
-            LOCATION: &user_profile.location,
             FAVORITE: &user_profile.favorite,
+            LATITUDE: &user_profile.latitude,
+            LONGITUDE: &user_profile.longitude,
         }
     }
 
@@ -91,8 +92,9 @@ impl UserServiceImpl {
             id: document.get_object_id(DOC_ID)?.to_hex(),
             username: document.get_str(USERNAME)?.to_owned(),
             password: document.get_str(PASSWORD)?.to_owned(),
-            location: document.get_str(LOCATION)?.to_owned(),
-            favorite: document.get_str(FAVORITE)?.to_owned(),
+            favorite: document.get_i64(FAVORITE)?,
+            latitude: document.get_f64(LATITUDE)?,
+            longitude: document.get_f64(LONGITUDE)?,
         })
     }
 }
@@ -133,6 +135,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         add interceptors here */
         let user_service =
             UserServiceServer::with_interceptor(user_service_core.clone(), _print_request);
+        println!("{:#?}", user_service_core._retrieve_user_all().await);
         println!(
             "{} {} {}",
             user_service_core.name.red().bold(),

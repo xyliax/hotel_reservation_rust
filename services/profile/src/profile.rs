@@ -106,6 +106,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "listens on".green().bold(),
             format!("{addr}").blue().bold().underline()
         );
+        profile_service_core.comment_db.insert_one(doc!{
+            
+        }, None).await?;
         match Server::builder()
             .add_service(profile_service)
             .serve(addr)

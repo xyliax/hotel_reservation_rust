@@ -21,6 +21,11 @@ pub mod recomm_svc {
     pub const ADDR: &'static str = "[::1]:50054";
     pub const PROT: &'static str = "http://[::1]:50054";
 }
+pub mod resch_svc {
+    pub const NAME: &'static str = "srv-recommendation";
+    pub const ADDR: &'static str = "[::1]:50055";
+    pub const PROT: &'static str = "http://[::1]:50055";
+}
 
 pub mod mongo_svc {
     pub const URL: &'static str = "mongodb://localhost:27017";
@@ -34,8 +39,9 @@ pub mod mongo_svc {
         pub const STR_ID: &'static str = "id";
         pub const USERNAME: &'static str = "username";
         pub const PASSWORD: &'static str = "password";
-        pub const LOCATION: &'static str = "location";
         pub const FAVORITE: &'static str = "favorite";
+        pub const LATITUDE: &'static str = "latitude";
+        pub const LONGITUDE: &'static str = "longitude";
     }
     pub mod comment {
         pub const DOC_ID: &'static str = "_id";
