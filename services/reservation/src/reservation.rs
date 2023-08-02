@@ -1,9 +1,7 @@
 mod pb;
-use config::*;
+use commons::*;
 use pb::reserv_api::reserv_service_server::*;
 use pb::reserv_api::*;
-use tonic::transport::{Channel, Server};
-use tonic::{Request, Response, Result, Status};
 use user::pb::user_api;
 use user_api::user_service_client::UserServiceClient;
 use user_api::CheckUserRequest;

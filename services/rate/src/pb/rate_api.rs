@@ -1,59 +1,41 @@
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Request {
+pub struct GetRatePlanRequest {
+    #[prost(int64, tag = "1")]
+    pub favorite: i64,
+    #[prost(int64, tag = "2")]
+    pub req_num: i64,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetRatePlanResponse {
     #[prost(string, repeated, tag = "1")]
     pub hotel_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    #[prost(string, tag = "2")]
-    pub in_date: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub out_date: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Result {
-    #[prost(message, repeated, tag = "1")]
-    pub rate_plans: ::prost::alloc::vec::Vec<RatePlan>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RatePlan {
+pub struct HotelInfo {
     #[prost(string, tag = "1")]
-    pub hotel_id: ::prost::alloc::string::String,
+    pub id: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
-    pub code: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub in_date: ::prost::alloc::string::String,
-    #[prost(string, tag = "4")]
-    pub out_date: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "5")]
-    pub room_type: ::core::option::Option<RoomType>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RoomType {
-    #[prost(double, tag = "1")]
-    pub bookable_rate: f64,
-    #[prost(double, tag = "2")]
-    pub total_rate: f64,
+    pub name: ::prost::alloc::string::String,
     #[prost(double, tag = "3")]
-    pub total_rate_inclusive: f64,
-    #[prost(string, tag = "4")]
-    pub code: ::prost::alloc::string::String,
-    #[prost(string, tag = "5")]
-    pub currency: ::prost::alloc::string::String,
-    #[prost(string, tag = "6")]
-    pub room_description: ::prost::alloc::string::String,
+    pub latitude: f64,
+    #[prost(double, tag = "4")]
+    pub longitude: f64,
+    #[prost(int64, tag = "5")]
+    pub provide: i64,
 }
 /// Generated client implementations.
-pub mod rate_client {
+pub mod rate_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct RateClient<T> {
+    pub struct RateServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl RateClient<tonic::transport::Channel> {
+    impl RateServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -64,7 +46,7 @@ pub mod rate_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> RateClient<T>
+    impl<T> RateServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -82,7 +64,7 @@ pub mod rate_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> RateClient<InterceptedService<T, F>>
+        ) -> RateServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -96,7 +78,7 @@ pub mod rate_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            RateClient::new(InterceptedService::new(inner, interceptor))
+            RateServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -129,11 +111,13 @@ pub mod rate_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        /// GetRates returns rate codes for hotels for a given date range
-        pub async fn get_rates(
+        pub async fn get_rate_plan(
             &mut self,
-            request: impl tonic::IntoRequest<super::Request>,
-        ) -> std::result::Result<tonic::Response<super::Result>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::GetRatePlanRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GetRatePlanResponse>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await
@@ -144,28 +128,33 @@ pub mod rate_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/rate_api.Rate/GetRates");
+            let path = http::uri::PathAndQuery::from_static(
+                "/rate_api.RateService/GetRatePlan",
+            );
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("rate_api.Rate", "GetRates"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("rate_api.RateService", "GetRatePlan"));
             self.inner.unary(req, path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod rate_server {
+pub mod rate_service_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with RateServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with RateServiceServer.
     #[async_trait]
-    pub trait Rate: Send + Sync + 'static {
-        /// GetRates returns rate codes for hotels for a given date range
-        async fn get_rates(
+    pub trait RateService: Send + Sync + 'static {
+        async fn get_rate_plan(
             &self,
-            request: tonic::Request<super::Request>,
-        ) -> std::result::Result<tonic::Response<super::Result>, tonic::Status>;
+            request: tonic::Request<super::GetRatePlanRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GetRatePlanResponse>,
+            tonic::Status,
+        >;
     }
     #[derive(Debug)]
-    pub struct RateServer<T: Rate> {
+    pub struct RateServiceServer<T: RateService> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
@@ -173,7 +162,7 @@ pub mod rate_server {
         max_encoding_message_size: Option<usize>,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: Rate> RateServer<T> {
+    impl<T: RateService> RateServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -225,9 +214,9 @@ pub mod rate_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for RateServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for RateServiceServer<T>
     where
-        T: Rate,
+        T: RateService,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -243,22 +232,26 @@ pub mod rate_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/rate_api.Rate/GetRates" => {
+                "/rate_api.RateService/GetRatePlan" => {
                     #[allow(non_camel_case_types)]
-                    struct GetRatesSvc<T: Rate>(pub Arc<T>);
-                    impl<T: Rate> tonic::server::UnaryService<super::Request>
-                    for GetRatesSvc<T> {
-                        type Response = super::Result;
+                    struct GetRatePlanSvc<T: RateService>(pub Arc<T>);
+                    impl<
+                        T: RateService,
+                    > tonic::server::UnaryService<super::GetRatePlanRequest>
+                    for GetRatePlanSvc<T> {
+                        type Response = super::GetRatePlanResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::Request>,
+                            request: tonic::Request<super::GetRatePlanRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut = async move { (*inner).get_rates(request).await };
+                            let fut = async move {
+                                (*inner).get_rate_plan(request).await
+                            };
                             Box::pin(fut)
                         }
                     }
@@ -269,7 +262,7 @@ pub mod rate_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = GetRatesSvc(inner);
+                        let method = GetRatePlanSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
@@ -300,7 +293,7 @@ pub mod rate_server {
             }
         }
     }
-    impl<T: Rate> Clone for RateServer<T> {
+    impl<T: RateService> Clone for RateServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -312,7 +305,7 @@ pub mod rate_server {
             }
         }
     }
-    impl<T: Rate> Clone for _Inner<T> {
+    impl<T: RateService> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(Arc::clone(&self.0))
         }
@@ -322,7 +315,7 @@ pub mod rate_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: Rate> tonic::server::NamedService for RateServer<T> {
-        const NAME: &'static str = "rate_api.Rate";
+    impl<T: RateService> tonic::server::NamedService for RateServiceServer<T> {
+        const NAME: &'static str = "rate_api.RateService";
     }
 }

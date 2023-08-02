@@ -10,18 +10,12 @@ path = "src/recommendation.rs"
 
 
 [dependencies]
-tonic = "0.9"
-prost = "0.11"
-tokio = { version = "1.29", features = ["full"] }
-# microservice dependencies
-config = { path = "../../config" }
+commons = { path = "../../commons" }
 research = { path = "../research" }
 rate = { path = "../rate" }
 profile = { path = "../profile" }
-# tracing
-opentelemetry = { version = "*", features = ["rt-tokio"] }
-opentelemetry-jaeger = { version = "*", features = ["rt-tokio"] }
-
+tonic = { workspace = true }
+prost = { workspace = true }
 
 [build-dependencies]
 tonic-build = "0.9"

@@ -6,7 +6,6 @@ service RecommService {
   rpc GetRecmd(GetRecmdRequest) returns (GetRecmdResponse);
 }
 
-// The requirement of the recommendation.
 message GetRecmdRequest {
   double latitude = 1;
   double longitude = 2;
@@ -21,6 +20,7 @@ message UserProfile {
   string id = 1;
   string username = 2;
   string password = 3;
-  string location = 4;
-  string favorite = 5;
+  int64 favorite = 4;
+  double latitude = 5;
+  double longitude = 6;
 }

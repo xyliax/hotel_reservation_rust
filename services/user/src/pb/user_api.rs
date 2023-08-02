@@ -14,6 +14,18 @@ pub struct CheckUserResponse {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserProfileRequest {
+    #[prost(string, tag = "1")]
+    pub username: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserProfileResponse {
+    #[prost(message, optional, tag = "1")]
+    pub user_profile: ::core::option::Option<UserProfile>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UserProfile {
     #[prost(string, tag = "1")]
     pub id: ::prost::alloc::string::String,
@@ -113,7 +125,6 @@ pub mod user_service_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        /// CheckUser returns whether the username and password are correct
         pub async fn check_user(
             &mut self,
             request: impl tonic::IntoRequest<super::CheckUserRequest>,
@@ -139,6 +150,31 @@ pub mod user_service_client {
                 .insert(GrpcMethod::new("user_api.UserService", "CheckUser"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn get_user_profile(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UserProfileRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UserProfileResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/user_api.UserService/GetUserProfile",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("user_api.UserService", "GetUserProfile"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -148,12 +184,18 @@ pub mod user_service_server {
     /// Generated trait containing gRPC methods that should be implemented for use with UserServiceServer.
     #[async_trait]
     pub trait UserService: Send + Sync + 'static {
-        /// CheckUser returns whether the username and password are correct
         async fn check_user(
             &self,
             request: tonic::Request<super::CheckUserRequest>,
         ) -> std::result::Result<
             tonic::Response<super::CheckUserResponse>,
+            tonic::Status,
+        >;
+        async fn get_user_profile(
+            &self,
+            request: tonic::Request<super::UserProfileRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UserProfileResponse>,
             tonic::Status,
         >;
     }
@@ -265,6 +307,52 @@ pub mod user_service_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = CheckUserSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/user_api.UserService/GetUserProfile" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetUserProfileSvc<T: UserService>(pub Arc<T>);
+                    impl<
+                        T: UserService,
+                    > tonic::server::UnaryService<super::UserProfileRequest>
+                    for GetUserProfileSvc<T> {
+                        type Response = super::UserProfileResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::UserProfileRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                (*inner).get_user_profile(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = GetUserProfileSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

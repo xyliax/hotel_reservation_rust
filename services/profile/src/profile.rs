@@ -1,15 +1,8 @@
 mod pb;
-use colored::*;
-use config::mongo_svc::comment::*;
-use config::*;
-use futures::stream::TryStreamExt;
-use mongodb::bson::document::ValueAccessError;
-use mongodb::bson::{doc, Document};
-use mongodb::{options::ClientOptions, Client, Collection};
+use commons::mongo_svc::comment::*;
+use commons::*;
 use pb::profile_api::profile_service_server::*;
 use pb::profile_api::*;
-use tonic::transport::Server;
-use tonic::{Request, Response, Result, Status};
 
 #[derive(Debug, Clone)]
 struct ProfileServiceImpl {
@@ -33,14 +26,14 @@ impl ProfileServiceImpl {
         })
     }
     /// - Retrieve all comments according to the given hotel id.
-    async fn retrieve_comments_by_hotel(
-        &self,
-        hotel_id: &String,
-    ) -> Result<Vec<Comment>, mongodb::error::Error> {
+    async fn retrieve_comments_by_hotel(&self, hotel_id: &String) -> Option<Vec<Comment>> {
         let query = doc! {
             HOTEL_ID: hotel_id,
         };
-        let mut cursor = self.comment_db.find(query, None).await?;
+        let mut cursor = match self.comment_db.find(query, None).await {
+            Ok(cursor) => cursor,
+            Err(_) => return None,
+        };
         let mut comment_list = Vec::<Comment>::new();
         loop {
             match cursor.try_next().await {
@@ -54,7 +47,7 @@ impl ProfileServiceImpl {
                 Err(_) => break,
             }
         }
-        Ok(comment_list)
+        Some(comment_list)
     }
 
     fn doc_to_comment(document: &Document) -> Result<Comment, ValueAccessError> {
@@ -62,8 +55,8 @@ impl ProfileServiceImpl {
             id: document.get_object_id(DOC_ID)?.to_hex(),
             hotel_id: document.get_str(HOTEL_ID)?.to_owned(),
             text: document.get_str(TEXT)?.to_owned(),
-            date: document.get_str(DATE)?.to_owned(),
-            author: document.get_str(AUTHOR)?.to_owned(),
+            date: document.get_datetime(DATE)?.to_string(),
+            author_id: document.get_str(AUTHOR_ID)?.to_owned(),
         })
     }
 }
@@ -75,20 +68,22 @@ impl ProfileService for ProfileServiceImpl {
         request: Request<GetCommentsRequest>,
     ) -> Result<Response<GetCommentsResponse>, Status> {
         let req_inner = request.into_inner();
-        let hotel_id = req_inner.hotel_id;
-        let reply = GetCommentsResponse {
-            comments: match self.retrieve_comments_by_hotel(&hotel_id).await {
-                Ok(comment_list) => comment_list,
-                Err(_) => return Err(Status::internal("Error in retrieve_comments_by_hotel")),
-            },
-        };
-        Ok(Response::new(reply))
+        let hotel_ids = req_inner.hotel_ids;
+        let mut comments_all_hotel = Vec::<Comment>::new();
+        for hotel_id in &hotel_ids {
+            match self.retrieve_comments_by_hotel(&hotel_id).await {
+                Some(mut comment_list) => comments_all_hotel.append(&mut comment_list),
+                None => (),
+            };
+            if comments_all_hotel.len() > 10_usize {
+                break;
+            }
+        }
+        // println!("{:#?}\n{:#?}", comments_all_hotel.len(), hotel_ids);
+        Ok(Response::new(GetCommentsResponse {
+            comments: comments_all_hotel,
+        }))
     }
-}
-
-fn _print_request(req: Request<()>) -> Result<Request<()>, Status> {
-    println!("intercept: {:#?}", req);
-    Ok(req)
 }
 
 #[tokio::main]
@@ -98,17 +93,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let profile_service_core = ProfileServiceImpl::initialize(profile_svc::NAME).await?;
         /*
         add interceptors here */
-        let profile_service =
-            ProfileServiceServer::with_interceptor(profile_service_core.clone(), _print_request);
+        let profile_service = ProfileServiceServer::with_interceptor(
+            profile_service_core.clone(),
+            interceptors::_print_request,
+        );
         println!(
             "{} {} {}",
             profile_service_core.name.red().bold(),
             "listens on".green().bold(),
             format!("{addr}").blue().bold().underline()
         );
-        profile_service_core.comment_db.insert_one(doc!{
-            
-        }, None).await?;
         match Server::builder()
             .add_service(profile_service)
             .serve(addr)

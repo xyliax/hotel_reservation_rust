@@ -1,15 +1,8 @@
 mod pb;
-use colored::*;
-use config::mongo_svc::user::*;
-use config::*;
-use futures::stream::TryStreamExt;
-use mongodb::bson::document::ValueAccessError;
-use mongodb::bson::{doc, Document};
-use mongodb::{options::ClientOptions, Client, Collection};
+use commons::mongo_svc::user::*;
+use commons::*;
 use pb::user_api::user_service_server::*;
 use pb::user_api::*;
-use tonic::transport::Server;
-use tonic::{Request, Response, Result, Status};
 
 #[derive(Debug, Clone)]
 struct UserServiceImpl {
@@ -119,23 +112,44 @@ impl UserService for UserServiceImpl {
             None => Err(Status::unauthenticated("{username} not Found!")),
         }
     }
-}
 
-fn _print_request(req: Request<()>) -> Result<Request<()>, Status> {
-    println!("intercept: {:#?}", req);
-    Ok(req)
+    async fn get_user_profile(
+        &self,
+        request: Request<UserProfileRequest>,
+    ) -> Result<Response<UserProfileResponse>, Status> {
+        // let parent_cx = global::get_text_map_propagator(|prop| {
+        //     prop.extract(&MetadataMap(request.metadata_mut()))
+        // });
+        // let mut span =
+        //     global::tracer("get_user_profile").start_with_context("Processing Reply", parent_cx);
+        let start0 = Instant::now();
+        let req_inner = request.into_inner();
+        let username = req_inner.username;
+        let user_profile = match self.retrieve_user_by_name(&username).await {
+            Some(user_profile) => user_profile,
+            None => return Err(Status::unauthenticated("{username} not Found!")),
+        };
+        let end0 = Instant::now();
+        let get_user_profile_inner = end0 - start0;
+        dbg!(get_user_profile_inner);
+        Ok(Response::new(UserProfileResponse {
+            user_profile: Some(user_profile),
+        }))
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
+        let _tracer = tracing::tracing_init(&user_svc::NAME.to_owned());
         let addr: std::net::SocketAddr = user_svc::ADDR.parse()?;
         let user_service_core = UserServiceImpl::initialize(user_svc::NAME).await?;
         /*
         add interceptors here */
-        let user_service =
-            UserServiceServer::with_interceptor(user_service_core.clone(), _print_request);
-        println!("{:#?}", user_service_core._retrieve_user_all().await);
+        let user_service = UserServiceServer::with_interceptor(
+            user_service_core.clone(),
+            interceptors::_print_request,
+        );
         println!(
             "{} {} {}",
             user_service_core.name.red().bold(),

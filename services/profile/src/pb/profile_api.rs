@@ -1,8 +1,8 @@
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetCommentsRequest {
-    #[prost(string, tag = "1")]
-    pub hotel_id: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "1")]
+    pub hotel_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -22,7 +22,7 @@ pub struct Comment {
     #[prost(string, tag = "4")]
     pub date: ::prost::alloc::string::String,
     #[prost(string, tag = "5")]
-    pub author: ::prost::alloc::string::String,
+    pub author_id: ::prost::alloc::string::String,
 }
 /// Generated client implementations.
 pub mod profile_service_client {

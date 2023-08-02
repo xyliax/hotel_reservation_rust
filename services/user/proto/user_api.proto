@@ -3,8 +3,8 @@ syntax = "proto3";
 package user_api;
 
 service UserService {
-  /* CheckUser returns whether the username and password are correct */
   rpc CheckUser(CheckUserRequest) returns (CheckUserResponse);
+  rpc GetUserProfile(UserProfileRequest) returns (UserProfileResponse);
 }
 
 message CheckUserRequest {
@@ -14,6 +14,14 @@ message CheckUserRequest {
 
 message CheckUserResponse {
   bool correct = 1;
+}
+
+message UserProfileRequest {
+  string username = 1;
+}
+
+message UserProfileResponse {
+  UserProfile user_profile = 1;
 }
 
 message UserProfile {

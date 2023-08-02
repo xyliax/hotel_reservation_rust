@@ -7,7 +7,7 @@ service ProfileService {
 }
 
 message GetCommentsRequest {
-  string hotel_id = 1;
+  repeated string hotel_ids = 1;
 }
 
 message GetCommentsResponse {
@@ -19,5 +19,5 @@ message Comment {
   string hotel_id = 2;
   string text = 3;
   string date = 4;
-  string author = 5;
+  string author_id = 5;
 }

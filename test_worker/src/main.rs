@@ -1,61 +1,48 @@
-use config::*;
-use mongodb::bson::document::ValueAccessError;
-use mongodb::bson::{doc, Document};
-use mongodb::{options::ClientOptions, Client, Collection};
-use profile::pb::profile_api::Comment;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
-use std::collections::HashSet;
-use user::pb::user_api::UserProfile;
+use commons::*;
+use recomm_api::recomm_service_client::RecommServiceClient;
+use recomm_api::*;
+use recommendation::pb::recomm_api;
+use tokio;
+use user::pb::user_api;
+use user_api::user_service_client::UserServiceClient;
+use user_api::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut mongo_client_options = ClientOptions::parse(mongo_svc::URL).await?;
-    mongo_client_options.app_name = Some("test_worker".to_owned());
-    let user_coll = Client::with_options(mongo_client_options)?
-        .database(mongo_svc::DB)
-        .collection::<Document>(mongo_svc::coll::USER_PROFILE);
-    initialize_database(&user_coll).await;
+    let mut user_client = UserServiceClient::connect(user_svc::PROT).await?;
+    let mut recomm_client = RecommServiceClient::connect(recomm_svc::PROT).await?;
+    let start0 = Instant::now();
+    let user_profile = user_client
+        .get_user_profile(Request::new(UserProfileRequest {
+            username: "user_02XDuS5q61".to_owned(),
+        }))
+        .await?
+        .into_inner()
+        .user_profile
+        .unwrap();
+    let end0 = Instant::now();
+    let get_user_profile_total = end0 - start0;
+    dbg!(get_user_profile_total);
+    let start0 = Instant::now();
+    let recommended_ids = recomm_client
+        .get_recmd(Request::new(GetRecmdRequest {
+            latitude: user_profile.latitude,
+            longitude: user_profile.longitude,
+            user_profile: Some(recomm_api::UserProfile {
+                id: user_profile.id.clone(),
+                username: user_profile.username.clone(),
+                password: user_profile.password.clone(),
+                favorite: user_profile.favorite,
+                latitude: user_profile.latitude,
+                longitude: user_profile.longitude,
+            }),
+        }))
+        .await?
+        .into_inner()
+        .hotel_ids;
+    let end0 = Instant::now();
+    let get_recmd_total = end0 - start0;
+    dbg!(get_recmd_total);
+    println!("{:#?}", recommended_ids);
     Ok(())
-}
-
-/**
- * Initialize user_profile collection with SAMPLES documents
- */
-async fn initialize_database(coll: &Collection<Document>) {
-    const SAMPLES: i32 = 10_000;
-    let mut checked_name = HashSet::<String>::new();
-    let mut docs = Vec::<Document>::new();
-    let mut count = SAMPLES;
-    loop {
-        let username = format!("user_{}", generate_string(10));
-        let password = generate_string(20);
-        if checked_name.contains(&username) {
-            continue;
-        }
-        checked_name.insert(username.clone());
-        println!("{}", username.clone());
-        docs.push(doc! {
-            mongo_svc::user::USERNAME: username,
-            mongo_svc::user::PASSWORD: password,
-            mongo_svc::user::LOCATION: "Hong Kong",
-            mongo_svc::user::FAVORITE: "Unknown",
-        });
-        count -= 1;
-        if count <= 0 {
-            break;
-        }
-    }
-    match coll.insert_many(docs, None).await {
-        Ok(res) => println!("{} users written to database!", res.inserted_ids.len()),
-        Err(err) => eprintln!("{err}"),
-    }
-}
-
-fn generate_string(len: usize) -> String {
-    thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(len)
-        .map(char::from)
-        .collect::<String>()
 }

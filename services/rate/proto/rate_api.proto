@@ -2,34 +2,23 @@ syntax = "proto3";
 
 package rate_api;
 
-service Rate {
-  // GetRates returns rate codes for hotels for a given date range
-  rpc GetRates(Request) returns (Result);
+service RateService {
+  rpc GetRatePlan(GetRatePlanRequest) returns (GetRatePlanResponse);
 }
 
-message Request {
-  repeated string hotelIds = 1;
-  string inDate = 2;
-  string outDate = 3;
+message GetRatePlanRequest {
+  int64 favorite = 1;
+  int64 req_num = 2;
 }
 
-message Result {
-  repeated RatePlan ratePlans = 1;
+message GetRatePlanResponse {
+  repeated string hotel_ids = 1;
 }
 
-message RatePlan {
-  string hotelId = 1;
-  string code = 2;
-  string inDate = 3;
-  string outDate = 4;
-  RoomType roomType = 5;
-}
-
-message RoomType {
-  double bookableRate = 1;
-  double totalRate = 2;
-  double totalRateInclusive = 3;
-  string code = 4;
-  string currency = 5;
-  string roomDescription = 6;
+message HotelInfo {
+  string id = 1;
+  string name = 2;
+  double latitude = 3;
+  double longitude = 4;
+  int64 provide = 5;
 }
