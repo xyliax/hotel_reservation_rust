@@ -1,0 +1,17 @@
+[package]
+name = "commons"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/commons.rs"
+
+[dependencies]
+tonic = { workspace = true }
+prost = { workspace = true }
+tokio = { workspace = true }
+mongodb = { workspace = true }
+futures = { workspace = true }
+colored = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry-jaeger = { workspace = true }

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package resch_api;
+
+service ReschService {
+    rpc reschNearby(ReschNearbyRequest) returns (ReschNearbyResponse);
+}
+
+message ReschNearbyRequest {
+    double latitude = 1;
+    double longitude = 2;
+}
+
+message ReschNearbyResponse {
+    repeated HotelDistance hotel_distance = 1;
+}
+
+message HotelDistance {
+    string hotel_id = 1;
+    double distance = 2;
+}
