@@ -34,12 +34,10 @@ impl GeoService {
                 hotel_info_cache: Arc::new(Mutex::new(HashMap::<String, Vec<HotelInfo>>::new())),
             };
             let mut geo_service_for_caching = geo_service.clone();
-            tokio::spawn(async move {
-                match geo_service_for_caching.cache_hotel_info(-1_i64).await {
-                    Ok(_) => (),
-                    Err(err) => println!("{err}\nUnable to cache hotel info!"),
-                }
-            });
+            match geo_service_for_caching.cache_hotel_info(-1_i64).await {
+                Ok(_) => (),
+                Err(err) => println!("{err}\nUnable to cache hotel info!"),
+            }
             geo_service
         })
     }
