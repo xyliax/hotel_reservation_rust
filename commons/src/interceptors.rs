@@ -1,10 +1,12 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub fn _print_request(
-    mut _req: tonic::Request<()>,
-) -> tonic::Result<tonic::Request<()>, tonic::Status> {
-    // println!("intercept: {:#?}", req);
-    // req.extensions_mut().insert("????");
+pub fn _print_request<T>(
+    mut _req: tonic::Request<T>,
+) -> tonic::Result<tonic::Request<T>, tonic::Status>
+where
+    T: std::fmt::Debug,
+{
+    println!("intercept: {:#?}", _req);
     Ok(_req)
 }
 

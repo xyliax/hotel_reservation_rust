@@ -140,33 +140,18 @@ impl UserService for UserServiceImpl {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        let _tracer = tracing::tracing_init(&user_svc::NAME.to_owned());
-        let addr: std::net::SocketAddr = user_svc::ADDR.parse()?;
-        let user_service_core = UserServiceImpl::initialize(user_svc::NAME).await?;
-        /*
-        add interceptors here */
-        let user_service = UserServiceServer::with_interceptor(
-            user_service_core.clone(),
-            interceptors::_print_request,
-        );
-        println!(
-            "{} {} {}",
-            user_service_core.name.red().bold(),
-            "listens on".green().bold(),
-            format!("{addr}").blue().bold().underline()
-        );
-        match Server::builder()
-            .add_service(user_service)
-            .serve(addr)
-            .await
-        {
-            Ok(_) => break,
-            Err(err) => {
-                eprintln!("{}", format!("{err}").red().bold());
-                continue;
-            }
-        }
-    }
+    // let _tracer = tracing::tracing_init(&user_svc::NAME.to_owned());
+    let addr: std::net::SocketAddr = user_svc::ADDR.parse()?;
+    let user_service_core = UserServiceImpl::initialize(user_svc::NAME).await?;
+    println!(
+        "{} {} {}",
+        user_service_core.name.red().bold(),
+        "listens on".green().bold(),
+        format!("{addr}").blue().bold().underline()
+    );
+    Server::builder()
+        .add_service(UserServiceServer::new(user_service_core))
+        .serve(addr)
+        .await?;
     Ok(())
 }

@@ -66,32 +66,17 @@ impl ReschService for ReschServiceImpl {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        let addr: std::net::SocketAddr = resch_svc::ADDR.parse()?;
-        let resch_service_core = ReschServiceImpl::initialize(resch_svc::NAME).await?;
-        /*
-        add interceptors here */
-        let resch_service = ReschServiceServer::with_interceptor(
-            resch_service_core.clone(),
-            interceptors::_print_request,
-        );
-        println!(
-            "{} {} {}",
-            resch_service_core.name.red().bold(),
-            "listens on".green().bold(),
-            format!("{addr}").blue().bold().underline()
-        );
-        match Server::builder()
-            .add_service(resch_service)
-            .serve(addr)
-            .await
-        {
-            Ok(_) => break,
-            Err(err) => {
-                eprintln!("{}", format!("{err}").red().bold());
-                continue;
-            }
-        }
-    }
+    let addr: std::net::SocketAddr = resch_svc::ADDR.parse()?;
+    let resch_service_core = ReschServiceImpl::initialize(resch_svc::NAME).await?;
+    println!(
+        "{} {} {}",
+        resch_service_core.name.red().bold(),
+        "listens on".green().bold(),
+        format!("{addr}").blue().bold().underline()
+    );
+    Server::builder()
+        .add_service(ReschServiceServer::new(resch_service_core))
+        .serve(addr)
+        .await?;
     Ok(())
 }

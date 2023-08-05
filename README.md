@@ -1,7 +1,27 @@
-# hotel_reservation_rust
+# Hotel Reservation in Rust
 Rust micro-service experimental architecture
 
-## Services (services/*)
+## Environment
+### Linux
+Development Version
+``` bash
+Linux 5.15.0-56-generic x86_64 GNU/Linux Ubuntu 22.04.2 LTS
+Intel Xeon E3-1280 v6, 4x Sky Lake, 8x Logical Processors
+```
+- Rust
+- Cargo
+- Mongodb
+
+## Build and Run
+### Build
+To build the project with Cargo
+``` shell
+cargo
+```
+
+
+## Package Structure
+### Services (services/*)
 - [x] user
 - [x] recommendation 
     - research, rate, profile
@@ -10,9 +30,9 @@ Rust micro-service experimental architecture
 - [x] rate
 - [x] profile
 - [x] geo
-- [ ] reservation (Not used!)
+- [ ] reservation [Not used!]
 
-## Commons (commons/*)
+### Commons (commons/*)
 - [x] commons
     - Store micro-service configuration
     - Import common modules, symbols...
@@ -22,7 +42,7 @@ Rust micro-service experimental architecture
     - tracing
     - interceptors
 
-## Tester (test_worker)
+### Tester (test_worker)
 - Issue request to user-service and recommendation-service
 
 

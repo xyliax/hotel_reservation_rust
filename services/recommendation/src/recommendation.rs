@@ -119,20 +119,24 @@ impl RecommService for RecommServiceImpl {
         for hotel_distance in resch_nearby_reply.clone().hotel_distance {
             nearby_ids.push(hotel_distance.hotel_id);
         }
+        let mut comments_for_all = Vec::<Comment>::new();
         let start1 = Instant::now();
-        let get_comments_reply: GetCommentsResponse = profile_client
-            .get_comments(Request::new(GetCommentsRequest {
-                hotel_ids: nearby_ids,
-            }))
-            .await?
-            .into_inner();
+        for nearby_id in nearby_ids {
+            let mut get_comments_reply: GetCommentsResponse = profile_client
+                .get_comments(Request::new(GetCommentsRequest {
+                    hotel_id: nearby_id,
+                }))
+                .await?
+                .into_inner();
+            comments_for_all.append(&mut get_comments_reply.comments);
+        }
         let end1 = Instant::now();
         let get_comments_total = end1 - start1;
         dbg!(get_comments_total);
         let recommended_ids = RecommServiceImpl::simple_recommend(
             &get_rate_plan_reply.hotel_ids,
             &resch_nearby_reply.hotel_distance,
-            &get_comments_reply.comments,
+            &comments_for_all,
         );
         let end0 = Instant::now();
         let get_recmd_inner = end0 - start0;
@@ -145,32 +149,17 @@ impl RecommService for RecommServiceImpl {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        let addr: std::net::SocketAddr = recomm_svc::ADDR.parse()?;
-        let recomm_service_core = RecommServiceImpl::initialize(recomm_svc::NAME).await?;
-        /*
-        add interceptors here */
-        let recomm_service = RecommServiceServer::with_interceptor(
-            recomm_service_core.clone(),
-            interceptors::_print_request,
-        );
-        println!(
-            "{} {} {}",
-            recomm_service_core.name.red().bold(),
-            "listens on".green().bold(),
-            format!("{addr}").blue().bold().underline()
-        );
-        match Server::builder()
-            .add_service(recomm_service)
-            .serve(addr)
-            .await
-        {
-            Ok(_) => break,
-            Err(err) => {
-                eprintln!("{}", format!("{err}").red().bold());
-                continue;
-            }
-        }
-    }
+    let addr: std::net::SocketAddr = recomm_svc::ADDR.parse()?;
+    let recomm_service_core = RecommServiceImpl::initialize(recomm_svc::NAME).await?;
+    println!(
+        "{} {} {}",
+        recomm_service_core.name.red().bold(),
+        "listens on".green().bold(),
+        format!("{addr}").blue().bold().underline()
+    );
+    Server::builder()
+        .add_service(RecommServiceServer::new(recomm_service_core))
+        .serve(addr)
+        .await?;
     Ok(())
 }

@@ -13,5 +13,5 @@ tokio = { workspace = true }
 mongodb = { workspace = true }
 futures = { workspace = true }
 colored = { workspace = true }
-opentelemetry = { workspace = true }
-opentelemetry-jaeger = { workspace = true }
+# opentelemetry = { workspace = true }
+# opentelemetry-jaeger = { workspace = true }

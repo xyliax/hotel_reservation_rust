@@ -3,11 +3,15 @@ use commons::mongo_svc::comment::*;
 use commons::*;
 use pb::profile_api::profile_service_server::*;
 use pb::profile_api::*;
+use std::collections::HashMap;
+
+static mut GET_COMMENTS_TIMER: Duration = Duration::new(0, 0);
 
 #[derive(Debug, Clone)]
 struct ProfileServiceImpl {
     name: String,
     comment_db: Collection<Document>,
+    comment_cache: HashMap<String, Vec<Comment>>,
 }
 
 impl ProfileServiceImpl {
@@ -23,14 +27,58 @@ impl ProfileServiceImpl {
                     .database(mongo_svc::DB)
                     .collection::<Document>(mongo_svc::coll::COMMENT)
             },
+            comment_cache: HashMap::<String, Vec<Comment>>::new(),
         })
     }
+    async fn cache_comments(&mut self, siz: i64) -> Result<(), mongodb::error::Error> {
+        let filter = doc! {};
+        let mut cursor = match self.comment_db.find(filter, None).await {
+            Ok(cursor) => cursor,
+            Err(err) => return Err(err),
+        };
+        let mut written = 0_i64;
+        loop {
+            match cursor.try_next().await {
+                Ok(opt) => match opt {
+                    Some(doc) => match ProfileServiceImpl::doc_to_comment(&doc) {
+                        Ok(comment) => {
+                            let hotel_id: &String = &comment.hotel_id;
+                            match self.comment_cache.get_mut(hotel_id) {
+                                Some(comments_for_id) => comments_for_id.push(comment),
+                                None => {
+                                    self.comment_cache.insert(hotel_id.clone(), vec![comment]);
+                                }
+                            };
+                            written += 1;
+                            if written >= siz && siz >= 0_i64 {
+                                return Ok(());
+                            }
+                        }
+                        Err(_) => (),
+                    },
+                    None => break,
+                },
+                Err(_) => break,
+            }
+        }
+        dbg!(written);
+        Ok(())
+    }
+
     /// - Retrieve all comments according to the given hotel id.
     async fn retrieve_comments_by_hotel(&self, hotel_id: &String) -> Option<Vec<Comment>> {
-        let query = doc! {
+        match self.comment_cache.get(hotel_id) {
+            Some(comments_for_id) => {
+                return Some(comments_for_id.clone());
+            }
+            None => {
+                eprintln!("{hotel_id}");
+            }
+        }
+        let filter = doc! {
             HOTEL_ID: hotel_id,
         };
-        let mut cursor = match self.comment_db.find(query, None).await {
+        let mut cursor = match self.comment_db.find(filter, None).await {
             Ok(cursor) => cursor,
             Err(_) => return None,
         };
@@ -67,53 +115,40 @@ impl ProfileService for ProfileServiceImpl {
         &self,
         request: Request<GetCommentsRequest>,
     ) -> Result<Response<GetCommentsResponse>, Status> {
+        let start0 = Instant::now();
         let req_inner = request.into_inner();
-        let hotel_ids = req_inner.hotel_ids;
-        let mut comments_all_hotel = Vec::<Comment>::new();
-        for hotel_id in &hotel_ids {
-            match self.retrieve_comments_by_hotel(&hotel_id).await {
-                Some(mut comment_list) => comments_all_hotel.append(&mut comment_list),
-                None => (),
-            };
-            if comments_all_hotel.len() > 10_usize {
-                break;
-            }
+        let hotel_id = req_inner.hotel_id;
+        let comments_for_hotel = match self.retrieve_comments_by_hotel(&hotel_id).await {
+            Some(comment_list) => comment_list,
+            None => Vec::<Comment>::new(),
+        };
+        let end0 = Instant::now();
+        let get_comments_inner = end0 - start0;
+        unsafe {
+            GET_COMMENTS_TIMER += get_comments_inner;
+            dbg!(GET_COMMENTS_TIMER);
         }
         // println!("{:#?}\n{:#?}", comments_all_hotel.len(), hotel_ids);
         Ok(Response::new(GetCommentsResponse {
-            comments: comments_all_hotel,
+            comments: comments_for_hotel,
         }))
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        let addr: std::net::SocketAddr = profile_svc::ADDR.parse()?;
-        let profile_service_core = ProfileServiceImpl::initialize(profile_svc::NAME).await?;
-        /*
-        add interceptors here */
-        let profile_service = ProfileServiceServer::with_interceptor(
-            profile_service_core.clone(),
-            interceptors::_print_request,
-        );
-        println!(
-            "{} {} {}",
-            profile_service_core.name.red().bold(),
-            "listens on".green().bold(),
-            format!("{addr}").blue().bold().underline()
-        );
-        match Server::builder()
-            .add_service(profile_service)
-            .serve(addr)
-            .await
-        {
-            Ok(_) => break,
-            Err(err) => {
-                eprintln!("{}", format!("{err}").red().bold());
-                continue;
-            }
-        }
-    }
+    let addr: std::net::SocketAddr = profile_svc::ADDR.parse()?;
+    let mut profile_service_core = ProfileServiceImpl::initialize(profile_svc::NAME).await?;
+    profile_service_core.cache_comments(-1_i64).await?;
+    println!(
+        "{} {} {}",
+        profile_service_core.name.red().bold(),
+        "listens on".green().bold(),
+        format!("{addr}").blue().bold().underline()
+    );
+    Server::builder()
+        .add_service(ProfileServiceServer::new(profile_service_core))
+        .serve(addr)
+        .await?;
     Ok(())
 }

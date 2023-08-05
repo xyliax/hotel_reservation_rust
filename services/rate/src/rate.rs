@@ -74,6 +74,7 @@ impl RateService for RateServiceImpl {
         &self,
         request: Request<GetRatePlanRequest>,
     ) -> Result<Response<GetRatePlanResponse>, Status> {
+        let start0 = Instant::now();
         let req_inner = request.into_inner();
         let favorite = req_inner.favorite;
         let req_num = req_inner.req_num;
@@ -92,6 +93,9 @@ impl RateService for RateServiceImpl {
             }
             None => (),
         };
+        let end0 = Instant::now();
+        let get_rate_plan_inner = end0 - start0;
+        dbg!(get_rate_plan_inner);
         Ok(Response::new(GetRatePlanResponse {
             hotel_ids: hotel_ids,
         }))
@@ -100,32 +104,17 @@ impl RateService for RateServiceImpl {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        let addr: std::net::SocketAddr = rate_svc::ADDR.parse()?;
-        let rate_service_core = RateServiceImpl::initialize(rate_svc::NAME).await?;
-        /*
-        add interceptors here */
-        let rate_service = RateServiceServer::with_interceptor(
-            rate_service_core.clone(),
-            interceptors::_print_request,
-        );
-        println!(
-            "{} {} {}",
-            rate_service_core.name.red().bold(),
-            "listens on".green().bold(),
-            format!("{addr}").blue().bold().underline()
-        );
-        match Server::builder()
-            .add_service(rate_service)
-            .serve(addr)
-            .await
-        {
-            Ok(_) => break,
-            Err(err) => {
-                eprintln!("{}", format!("{err}").red().bold());
-                continue;
-            }
-        }
-    }
+    let addr: std::net::SocketAddr = rate_svc::ADDR.parse()?;
+    let rate_service_core = RateServiceImpl::initialize(rate_svc::NAME).await?;
+    println!(
+        "{} {} {}",
+        rate_service_core.name.red().bold(),
+        "listens on".green().bold(),
+        format!("{addr}").blue().bold().underline()
+    );
+    Server::builder()
+        .add_service(RateServiceServer::new(rate_service_core))
+        .serve(addr)
+        .await?;
     Ok(())
 }

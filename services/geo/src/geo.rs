@@ -140,28 +140,17 @@ impl GeoService for GeoServiceImpl {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        let addr: std::net::SocketAddr = geo_svc::ADDR.parse()?;
-        let geo_service_core = GeoServiceImpl::initialize(geo_svc::NAME).await?;
-        /*
-        add interceptors here */
-        let geo_service = GeoServiceServer::with_interceptor(
-            geo_service_core.clone(),
-            interceptors::_print_request,
-        );
-        println!(
-            "{} {} {}",
-            geo_service_core.name.red().bold(),
-            "listens on".green().bold(),
-            format!("{addr}").blue().bold().underline()
-        );
-        match Server::builder().add_service(geo_service).serve(addr).await {
-            Ok(_) => break,
-            Err(err) => {
-                eprintln!("{}", format!("{err}").red().bold());
-                continue;
-            }
-        }
-    }
+    let addr: std::net::SocketAddr = geo_svc::ADDR.parse()?;
+    let geo_service_core = GeoServiceImpl::initialize(geo_svc::NAME).await?;
+    println!(
+        "{} {} {}",
+        geo_service_core.name.red().bold(),
+        "listens on".green().bold(),
+        format!("{addr}").blue().bold().underline()
+    );
+    Server::builder()
+        .add_service(GeoServiceServer::new(geo_service_core))
+        .serve(addr)
+        .await?;
     Ok(())
 }

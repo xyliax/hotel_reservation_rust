@@ -8,9 +8,6 @@ pub use mongodb;
 pub use mongodb::bson::document::ValueAccessError;
 pub use mongodb::bson::{doc, Document};
 pub use mongodb::{options::ClientOptions, Client, Collection};
-pub use opentelemetry::sdk::propagation::TraceContextPropagator;
-pub use opentelemetry::trace::*;
-pub use opentelemetry::{global, KeyValue};
 pub use prost;
 pub use tokio;
 pub use tokio::time::*;
@@ -41,7 +38,7 @@ pub mod recomm_svc {
     pub const NAME: &'static str = "srv-recommendation";
     pub const ADDR: &'static str = "[::1]:50054";
     pub const PROT: &'static str = "http://[::1]:50054";
-    pub const RECOMM_NUM: i64 = 10_i64;
+    pub const RECOMM_NUM: i64 = 100_i64;
     pub const POP_THRESHOLD: i64 = 10_i64;
 }
 
