@@ -8,6 +8,9 @@ edition = "2021"
 name = "profile-service"
 path = "src/profile.rs"
 
+[lib]
+path = "src/lib.rs"
+
 
 [dependencies]
 commons = { path = "../../commons" }

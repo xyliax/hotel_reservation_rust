@@ -7,6 +7,9 @@ edition = "2021"
 name = "user-service"
 path = "src/user.rs"
 
+[lib]
+path = "src/lib.rs"
+
 
 [dependencies]
 commons = { path = "../../commons" }

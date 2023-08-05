@@ -3,11 +3,18 @@ name = "test-worker"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "test_get_recmd"
+path = "src/get_recmd.rs"
+
+[[bin]]
+name = "test_peek_info"
+path = "src/peek_info.rs"
 
 [dependencies]
 commons = { path = "../commons" }
 user = { path = "../services/user" }
 recommendation = { path = "../services/recommendation" }
+geo = { path = "../services/geo" }
+monolithic-service = { path = "../monolithic-service" }
 rand = "0.8.5"
-tokio = { version = "1.29", features = ["macros", "rt-multi-thread"] }

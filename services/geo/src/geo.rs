@@ -4,10 +4,13 @@ use commons::*;
 use pb::geo_api::geo_service_server::*;
 use pb::geo_api::*;
 
+static mut PEEK_INFO_TIMER: Duration = Duration::new(0, 0);
+
 #[derive(Debug, Clone)]
 struct GeoServiceImpl {
     name: String,
     hotel_db: Collection<Document>,
+    hotel_info_cache: Cache<HotelInfo>,
 }
 
 impl GeoServiceImpl {
@@ -23,7 +26,39 @@ impl GeoServiceImpl {
                     .database(mongo_svc::DB)
                     .collection::<Document>(mongo_svc::coll::HOTEL)
             },
+            hotel_info_cache: Arc::new(Mutex::new(HashMap::<String, Vec<HotelInfo>>::new())),
         })
+    }
+
+    async fn cache_hotel_info(&mut self, siz: i64) -> Result<(), mongodb::error::Error> {
+        let mut locked_cache = self.hotel_info_cache.lock().await;
+        let filter = doc! {};
+        let mut cursor = match self.hotel_db.find(filter, None).await {
+            Ok(cursor) => cursor,
+            Err(err) => return Err(err),
+        };
+        let mut cache_written = 0_i64;
+        loop {
+            if let Ok(Some(doc)) = cursor.try_next().await {
+                if let Ok(hotel_info) = GeoServiceImpl::doc_to_hotel_info(&doc) {
+                    let hotel_id: &String = &hotel_info.id;
+                    match locked_cache.get_mut(hotel_id) {
+                        Some(hotel_info_for_id) => hotel_info_for_id.push(hotel_info),
+                        None => {
+                            locked_cache.insert(hotel_id.clone(), vec![hotel_info]);
+                        }
+                    };
+                    cache_written += 1;
+                    if cache_written >= siz && siz >= 0_i64 {
+                        return Ok(());
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+        dbg!(cache_written);
+        Ok(())
     }
 
     async fn retrieve_hotel_all(&self) -> Option<Vec<HotelInfo>> {
@@ -34,15 +69,13 @@ impl GeoServiceImpl {
         };
         let mut hotel_list = Vec::<HotelInfo>::new();
         loop {
-            match cursor.try_next().await {
-                Ok(opt) => match opt {
-                    Some(doc) => match GeoServiceImpl::doc_to_hotel_info(&doc) {
-                        Ok(hotel_info) => hotel_list.push(hotel_info),
-                        Err(_) => (),
-                    },
-                    None => break,
-                },
-                Err(_) => break,
+            if let Ok(Some(doc)) = cursor.try_next().await {
+                match GeoServiceImpl::doc_to_hotel_info(&doc) {
+                    Ok(hotel_info) => hotel_list.push(hotel_info),
+                    Err(_) => (),
+                }
+            } else {
+                break;
             }
         }
         Some(hotel_list)
@@ -65,9 +98,9 @@ impl GeoServiceImpl {
         let lat2_r = lat2.to_radians();
         let delta_lat = (lat1 - lat2).to_radians();
         let delta_lon = (lon1 - lon2).to_radians();
-        let central_angle_inner = (delta_lat / 2.0).sin().powi(2)
-            + lat1_r.cos() * lat2_r.cos() * (delta_lon / 2.0).sin().powi(2);
-        let central_angle = 2.0 * central_angle_inner.sqrt().asin();
+        let central_angle_inner = (delta_lat / 2.0_f64).sin().powi(2)
+            + lat1_r.cos() * lat2_r.cos() * (delta_lon / 2.0_f64).sin().powi(2);
+        let central_angle = 2.0_f64 * central_angle_inner.sqrt().asin();
         earth_radius_meter * central_angle
     }
 }
@@ -130,10 +163,30 @@ impl GeoService for GeoServiceImpl {
 
     async fn peek_info(
         &self,
-        _request: Request<PeekInfoRequest>,
+        request: Request<PeekInfoRequest>,
     ) -> Result<Response<PeekInfoResponse>, Status> {
+        let start0 = Instant::now();
+        let req_inner = request.into_inner();
+        let hotel_ids = req_inner.hotel_ids;
+        let mut locked_cache = self.hotel_info_cache.lock().await;
+        let mut hotel_info_list = Vec::<HotelInfo>::new();
+        for hotel_id in &hotel_ids {
+            match locked_cache.get_mut(hotel_id) {
+                Some(mut hotel_info_for_id) => hotel_info_list.append(&mut hotel_info_for_id),
+                None => (),
+            }
+        }
+        let end0 = Instant::now();
+        unsafe {
+            let peek_info_inner = end0 - start0;
+            PEEK_INFO_TIMER += peek_info_inner;
+            eprintln!(
+                "peek_info_inner = {:#?} PEEK_INFO_TIMER = {:#?}",
+                peek_info_inner, PEEK_INFO_TIMER
+            );
+        }
         Ok(Response::new(PeekInfoResponse {
-            hotel_info_list: Vec::new(),
+            hotel_info_list: hotel_info_list,
         }))
     }
 }
@@ -142,6 +195,13 @@ impl GeoService for GeoServiceImpl {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr: std::net::SocketAddr = geo_svc::ADDR.parse()?;
     let geo_service_core = GeoServiceImpl::initialize(geo_svc::NAME).await?;
+    let mut geo_service_for_caching = geo_service_core.clone();
+    tokio::spawn(async move {
+        match geo_service_for_caching.cache_hotel_info(-1_i64).await {
+            Ok(_) => (),
+            Err(err) => println!("{err}\nUnable to cache hotel info!"),
+        }
+    });
     println!(
         "{} {} {}",
         geo_service_core.name.red().bold(),

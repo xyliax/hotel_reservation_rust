@@ -8,6 +8,10 @@ edition = "2021"
 name = "rate-service"
 path = "src/rate.rs"
 
+[lib]
+path = "src/lib.rs"
+
+
 [dependencies]
 commons = { path = "../../commons" }
 tonic = { workspace = true }

@@ -10,19 +10,12 @@ tokio = { version = "1.29", features = ["macros", "rt-multi-thread"] }
 mongodb = { version = "2.6" }
 futures = { version = "0.3" }
 colored = { version = "2.0" }
-
-# opentelemetry = { version = "*", features = ["rt-tokio"] }
-# opentelemetry-jaeger = { version = "*", features = ["rt-tokio"] }
-
 tonic-build = { version = "0.9" }
 
 [profile.dev]
 opt-level = 0
-debug = true
-rpath = false
 lto = false
 debug-assertions = true
 codegen-units = 32
-panic = 'unwind'
 incremental = true
 overflow-checks = true

@@ -8,6 +8,9 @@ edition = "2021"
 name = "research-service"
 path = "src/research.rs"
 
+[lib]
+path = "src/lib.rs"
+
 
 [dependencies]
 commons = { path = "../../commons" }

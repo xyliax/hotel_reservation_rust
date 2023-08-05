@@ -117,11 +117,6 @@ impl UserService for UserServiceImpl {
         &self,
         request: Request<UserProfileRequest>,
     ) -> Result<Response<UserProfileResponse>, Status> {
-        // let parent_cx = global::get_text_map_propagator(|prop| {
-        //     prop.extract(&MetadataMap(request.metadata_mut()))
-        // });
-        // let mut span =
-        //     global::tracer("get_user_profile").start_with_context("Processing Reply", parent_cx);
         let start0 = Instant::now();
         let req_inner = request.into_inner();
         let username = req_inner.username;
