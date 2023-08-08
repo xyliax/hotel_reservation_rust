@@ -21,16 +21,17 @@ USER_DEBUG_FILENAME		:=	user-debug.out
 
 
 micro-debug: $(DEBUG_BIN_DIR) # start all micro-services
-	@rm -f $(MICRO_DEBUG_FILENAME)
+	@rm -f $(MICRO_DEBUG_FILENAME) && touch $(MICRO_DEBUG_FILENAME)
 	@$(foreach service, $(MICRO_SERVICES), \
 		$(MKFILE_DIR)/$(DEBUG_BIN_DIR)/$(service)& 2>> $(MICRO_DEBUG_FILENAME))
 	@tail -f $(MICRO_DEBUG_FILENAME)
 
 test-peekinfo: $(DEBUG_BIN_DIR)
-	@rm -f $(MONO_DEBUG_FILENAME) $(USER_DEBUG_FILENAME)
-	@$(MKFILE_DIR)/$(DEBUG_BIN_DIR)/$(PEEK_INFO_TEST) $(item) $(req)& \
-		1>> $(USER_DEBUG_FILENAME) 2>> $(MONO_DEBUG_FILENAME)
+	@rm -f $(MONO_DEBUG_FILENAME) && touch $(MONO_DEBUG_FILENAME) $(USER_DEBUG_FILENAME)
+	@$(MKFILE_DIR)/$(DEBUG_BIN_DIR)/$(PEEK_INFO_TEST) $(item) $(req) \
+		1>> $(USER_DEBUG_FILENAME) 2>> $(MONO_DEBUG_FILENAME) &
 	@tail -f $(MONO_DEBUG_FILENAME)
 
 stop-all: 
 	killall -q $(MICRO_SERVICES) $(MONO_SERVICE) &
+	sleep 1

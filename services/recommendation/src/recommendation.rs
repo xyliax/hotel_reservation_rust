@@ -85,8 +85,8 @@ impl RecommService for RecommServiceImpl {
             Ok(client) => client,
             Err(err) => return Err(Status::internal(format!("{:?}", err))),
         };
-        let start0 = Instant::now();
         let req_inner = request.into_inner();
+        let start0 = Instant::now();
         let latitude = req_inner.latitude;
         let longitude = req_inner.longitude;
         let user_profile_opt = req_inner.user_profile;

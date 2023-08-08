@@ -12,7 +12,7 @@ pub struct HotelInfo {
 
 #[derive(Debug, Clone)]
 pub struct GeoService {
-    name: String,
+    pub name: String,
     hotel_db: Collection<Document>,
     pub hotel_info_cache: Cache<HotelInfo>,
 }
@@ -21,7 +21,7 @@ impl GeoService {
     /// - Create a new geo service connected to the database.
     pub async fn initialize(name: &str) -> Result<Self, mongodb::error::Error> {
         Ok({
-            let mut geo_service = Self {
+            let geo_service = Self {
                 name: name.to_owned(),
                 hotel_db: {
                     let mut mongo_client_options = ClientOptions::parse(mongo_svc::URL).await?;
@@ -73,7 +73,7 @@ impl GeoService {
         Ok(())
     }
 
-    async fn retrieve_hotel_all(&self) -> Option<Vec<HotelInfo>> {
+    pub(in crate::mono_service) async fn retrieve_hotel_all(&self) -> Option<Vec<HotelInfo>> {
         let filter = doc! {};
         let mut cursor = match self.hotel_db.find(filter, None).await {
             Ok(cursor) => cursor,
@@ -104,7 +104,7 @@ impl GeoService {
     }
     /// - Calculate distance given latitude-longitude coordinates.
     /// - Approximately correct in KM level.
-    fn calc_distance(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+    pub(in crate::mono_service) fn calc_distance(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
         let earth_radius_meter = 6_378_100_f64;
         let lat1_r = lat1.to_radians();
         let lat2_r = lat2.to_radians();

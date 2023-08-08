@@ -29,6 +29,7 @@ impl ProfileServiceImpl {
             comment_cache: Arc::new(Mutex::new(HashMap::<String, Vec<Comment>>::new())),
         })
     }
+    
     async fn cache_comments(&mut self, siz: i64) -> Result<(), mongodb::error::Error> {
         let mut locked_cache = self.comment_cache.lock().await;
         let filter = doc! {};
@@ -109,8 +110,8 @@ impl ProfileService for ProfileServiceImpl {
         &self,
         request: Request<GetCommentsRequest>,
     ) -> Result<Response<GetCommentsResponse>, Status> {
-        let start0 = Instant::now();
         let req_inner = request.into_inner();
+        let start0 = Instant::now();
         let hotel_id = req_inner.hotel_id;
         let comments_for_hotel = match self.retrieve_comments_by_hotel(&hotel_id).await {
             Some(comment_list) => comment_list,

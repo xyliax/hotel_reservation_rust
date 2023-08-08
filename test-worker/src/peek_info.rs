@@ -33,7 +33,7 @@ async fn retrieve_all_hotel_ids() -> Result<Vec<String>, Box<dyn std::error::Err
 
 async fn test_peek_info(item_per_req: i64, req_num: i64) -> Result<(), Box<dyn std::error::Error>> {
     let mut geo_client = GeoServiceClient::connect(geo_svc::PROT).await?;
-    let mut mono_client = MonoService::initialize(mono_svc::NAME).await?;
+    let mono_client = MonoService::initialize(mono_svc::NAME).await?;
     let hotel_ids = retrieve_all_hotel_ids().await?;
     let mut request_whole = Vec::<Vec<String>>::new();
     for _ in 0..req_num {
@@ -56,17 +56,19 @@ async fn test_peek_info(item_per_req: i64, req_num: i64) -> Result<(), Box<dyn s
     }
     let end0 = Instant::now();
     let peek_info_total_micro = end0 - start0;
-    dbg!(peek_info_total_micro);
-
     let start0 = Instant::now();
     for packet_num in 0..req_num {
-        mono_client.geo_service
-            .peek_info(&request_whole[packet_num as usize].clone())
+        mono_client
+            .geo_service
+            .peek_info(&request_whole[packet_num as usize])
             .await?;
     }
     let end0 = Instant::now();
     let peek_info_total_mono = end0 - start0;
-    dbg!(peek_info_total_mono);
+    println!(
+        "{item_per_req} x {req_num}: peek_info_total_mono = {:#?} peek_info_total_micro = {:#?}",
+        peek_info_total_mono, peek_info_total_micro
+    );
     Ok(())
 }
 

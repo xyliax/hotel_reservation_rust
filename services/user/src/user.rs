@@ -117,8 +117,8 @@ impl UserService for UserServiceImpl {
         &self,
         request: Request<UserProfileRequest>,
     ) -> Result<Response<UserProfileResponse>, Status> {
-        let start0 = Instant::now();
         let req_inner = request.into_inner();
+        let start0 = Instant::now();
         let username = req_inner.username;
         let user_profile = match self.retrieve_user_by_name(&username).await {
             Some(user_profile) => user_profile,

@@ -111,12 +111,12 @@ impl GeoService for GeoServiceImpl {
         &self,
         request: Request<NearbyRequest>,
     ) -> Result<Response<NearbyResponse>, Status> {
-        let start0 = Instant::now();
         let req_inner = request.into_inner();
+        let start0 = Instant::now();
         let nearby_num = req_inner.nearby_num;
         let latitude = req_inner.latitude;
         let longitude = req_inner.longitude;
-        let hotel_list: Vec<HotelInfo> = match GeoServiceImpl::retrieve_hotel_all(&self).await {
+        let hotel_list: Vec<HotelInfo> = match self.retrieve_hotel_all().await {
             Some(mut hotel_list) => {
                 hotel_list.sort_by(|hotel_1, hotel_2| {
                     GeoServiceImpl::calc_distance(
@@ -165,9 +165,9 @@ impl GeoService for GeoServiceImpl {
         &self,
         request: Request<PeekInfoRequest>,
     ) -> Result<Response<PeekInfoResponse>, Status> {
-        let start0 = Instant::now();
         let req_inner = request.into_inner();
         let hotel_ids = req_inner.hotel_ids;
+        let start0 = Instant::now();
         let mut locked_cache = self.hotel_info_cache.lock().await;
         let mut hotel_info_list = Vec::<HotelInfo>::new();
         for hotel_id in &hotel_ids {

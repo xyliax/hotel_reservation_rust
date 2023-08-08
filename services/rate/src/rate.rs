@@ -74,8 +74,8 @@ impl RateService for RateServiceImpl {
         &self,
         request: Request<GetRatePlanRequest>,
     ) -> Result<Response<GetRatePlanResponse>, Status> {
-        let start0 = Instant::now();
         let req_inner = request.into_inner();
+        let start0 = Instant::now();
         let favorite = req_inner.favorite;
         let req_num = req_inner.req_num;
         let mut hotel_ids = Vec::<String>::new();
