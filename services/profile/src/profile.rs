@@ -1,5 +1,6 @@
 mod pb;
 use commons::mongo_svc::comment::*;
+use commons::profile_svc::*;
 use commons::*;
 use pb::profile_api::profile_service_server::*;
 use pb::profile_api::*;
@@ -29,7 +30,7 @@ impl ProfileServiceImpl {
             comment_cache: Arc::new(Mutex::new(HashMap::<String, Vec<Comment>>::new())),
         })
     }
-    
+
     async fn cache_comments(&mut self, siz: i64) -> Result<(), mongodb::error::Error> {
         let mut locked_cache = self.comment_cache.lock().await;
         let filter = doc! {};
@@ -121,10 +122,12 @@ impl ProfileService for ProfileServiceImpl {
         let get_comments_inner = end0 - start0;
         unsafe {
             GET_COMMENTS_TIMER += get_comments_inner;
-            eprintln!(
-                "get_comments_inner = {:#?} GET_COMMENTS_TIMER = {:#?}",
-                get_comments_inner, GET_COMMENTS_TIMER
-            );
+            if GET_COMMENTS_LOG {
+                eprintln!(
+                    "get_comments_inner = {:#?} GET_COMMENTS_TIMER = {:#?}",
+                    get_comments_inner, GET_COMMENTS_TIMER
+                );
+            }
         }
         // println!("{:#?}\n{:#?}", comments_all_hotel.len(), hotel_ids);
         Ok(Response::new(GetCommentsResponse {

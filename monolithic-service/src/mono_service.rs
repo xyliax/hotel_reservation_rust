@@ -4,7 +4,7 @@ pub mod rate;
 pub mod recommendation;
 pub mod research;
 pub mod user;
-use commons::*;
+use commons::{profile_svc::GET_COMMENTS_LOG, *};
 use geo::*;
 use profile::*;
 use rate::*;
@@ -228,10 +228,12 @@ impl ProfileService {
         let get_comments_inner = end0 - start0;
         unsafe {
             GET_COMMENTS_TIMER += get_comments_inner;
-            eprintln!(
-                "get_comments_inner = {:#?} GET_COMMENTS_TIMER = {:#?}",
-                get_comments_inner, GET_COMMENTS_TIMER
-            );
+            if GET_COMMENTS_LOG {
+                eprintln!(
+                    "get_comments_inner = {:#?} GET_COMMENTS_TIMER = {:#?}",
+                    get_comments_inner, GET_COMMENTS_TIMER
+                );
+            }
         }
         // println!("{:#?}\n{:#?}", comments_all_hotel.len(), hotel_ids);
         Ok(comments_for_hotel)

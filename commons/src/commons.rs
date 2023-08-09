@@ -36,6 +36,7 @@ pub mod profile_svc {
     pub const NAME: &'static str = "srv-profile";
     pub const ADDR: &'static str = "[::1]:50053";
     pub const PROT: &'static str = "http://[::1]:50053";
+    pub const GET_COMMENTS_LOG: bool = true;
 }
 
 pub mod recomm_svc {
@@ -44,6 +45,7 @@ pub mod recomm_svc {
     pub const PROT: &'static str = "http://[::1]:50054";
     pub const RECOMM_NUM: i64 = 100_i64;
     pub const POP_THRESHOLD: i64 = 0_i64;
+    pub const GET_RECMD_LOG: bool = true;
 }
 
 pub mod resch_svc {
@@ -51,18 +53,21 @@ pub mod resch_svc {
     pub const ADDR: &'static str = "[::1]:50055";
     pub const PROT: &'static str = "http://[::1]:50055";
     pub const NEARBY_NUM: i64 = 100_i64;
+    pub const GET_RESCH_NEARBY_LOG: bool = true;
 }
 
 pub mod geo_svc {
     pub const NAME: &'static str = "srv-geo";
     pub const ADDR: &'static str = "[::1]:50056";
     pub const PROT: &'static str = "http://[::1]:50056";
+    pub const NEARBY_LOG: bool = true;
 }
 
 pub mod rate_svc {
     pub const NAME: &'static str = "srv-rate";
     pub const ADDR: &'static str = "[::1]:50057";
     pub const PROT: &'static str = "http://[::1]:50057";
+    pub const GET_RATE_PLAN_LOG: bool = true;
 }
 
 pub mod mono_svc {
